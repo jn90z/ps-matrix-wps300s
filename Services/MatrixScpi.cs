@@ -11,6 +11,12 @@ public static class MatrixScpi
     public const string MeasureVoltage = "MEAS:VOLT?";
     public const string MeasureCurrent = "MEAS:CURR?";
     public const string MeasurePower = "MEAS:POW?";
+    public const string MeasureVoltageCurrent = "MEAS:VCM?";
+    public const string QuerySetpoints = "APPL?";
+    public const string QueryError = "SYST:ERR?";
+    public const string QueryTemperature = "SYST:TEMP?";
+    public const string QueryOverVoltage = "VOLT:PROT?";
+    public const string QueryOverCurrent = "CURR:PROT?";
     public const string QueryOutput = "OUTP?";
     public const string OutputOn = "OUTP ON";
     public const string OutputOff = "OUTP OFF";
