@@ -70,3 +70,10 @@ USB communication and GUI only. No scheduling, cloud, network service, Plex inte
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+
+## Matrix protocol diagnostics (2026-10-30)
+
+The WPS300S manufacturer programming manual documents 9600 baud, 8 data bits, no parity, one stop bit, and CRLF (`\r\n`) command termination. `*IDN?` has been verified on a real WPS300S-15005 firmware 1.1 via COM8. Measurement polling now uses the documented combined `MEAS:VCM?` query, which should return `voltage,current`. The application logs the exact TX command and RX response and pauses after three consecutive readback failures. A successful ID query does not by itself prove that every SCPI command is implemented by firmware 1.1. If polling pauses, disable live polling and report the log; verify front-panel output state independently. Never assume output-off was successful after communication loss.
+
+Manufacturer reference: https://www.szmatrix.com/wp-content/uploads/2025/09/MPS-200WPS300S-Series-SCPI-Programming-Protocol-1.pdf
