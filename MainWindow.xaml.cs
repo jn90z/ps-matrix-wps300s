@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Management;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Threading;
 using MatrixWps300s.Services;
@@ -33,8 +35,31 @@ public partial class MainWindow : Window
     private void RefreshPorts()
     {
         string? prior = (PortCombo.SelectedItem as PortChoice)?.Port;
-        var ports = UsbSerialScpiClient.Ports();
-        PortCombo.ItemsSource = ports.Select(p => new PortChoice(p, "USB-SERIAL CH340 (" + p + ")")).ToArray();
+        var activePorts = UsbSerialScpiClient.Ports().ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var matches = new List<PortChoice>();
+        try
+        {
+            using var searcher = new ManagementObjectSearcher("SELECT Name, PNPDeviceID FROM Win32_PnPEntity WHERE Name LIKE '%(COM%'");
+            foreach (ManagementObject device in searcher.Get())
+            {
+                using (device)
+                {
+                    string name = device["Name"]?.ToString() ?? "";
+                    string hardwareId = device["PNPDeviceID"]?.ToString() ?? "";
+                    bool ch340 = name.Contains("CH340", StringComparison.OrdinalIgnoreCase) ||
+                                 name.Contains("CH341", StringComparison.OrdinalIgnoreCase) ||
+                                 hardwareId.Contains("VID_1A86&PID_7523", StringComparison.OrdinalIgnoreCase);
+                    if (!ch340) continue;
+                    var match = Regex.Match(name, @"\((COM\d+)\)", RegexOptions.IgnoreCase);
+                    if (!match.Success) continue;
+                    string port = match.Groups[1].Value;
+                    if (activePorts.Contains(port)) matches.Add(new PortChoice(port, "MATRIX WPS300S (" + port + ")"));
+                }
+            }
+        }
+        catch (ManagementException ex) { AddLog("CH340 discovery failed: " + ex.Message); }
+        PortCombo.ItemsSource = matches.GroupBy(p => p.Port, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToArray();
+        if (matches.Count == 0) AddLog("No CH340 USB serial adapter found. Check USB connection and driver.");
         var choices = PortCombo.Items.Cast<PortChoice>().ToArray();
         PortCombo.SelectedItem = choices.FirstOrDefault(p => p.Port == prior) ?? choices.FirstOrDefault();
     }
