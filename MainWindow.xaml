@@ -15,6 +15,12 @@
    <Setter Property="CaretBrush" Value="#54DDFB"/><Setter Property="BorderBrush" Value="#445469"/>
    <Setter Property="Padding" Value="8,5"/>
   </Style>
+  <Style TargetType="ComboBoxItem">
+   <Setter Property="Foreground" Value="#111827"/>
+   <Setter Property="Background" Value="#FFFFFF"/>
+   <Setter Property="Padding" Value="7,6"/>
+   <Setter Property="MinHeight" Value="30"/>
+  </Style>
   <Style TargetType="TextBlock">
    <Setter Property="Foreground" Value="#EAF0F7"/>
   </Style>
@@ -28,7 +34,7 @@
     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
      <TextBlock Text="MATRIX  /  WPS300S-150-5" FontWeight="Bold" FontSize="17" VerticalAlignment="Center" Margin="0,0,20,0"/>
      <TextBlock Text="USB COM" VerticalAlignment="Center"/>
-     <ComboBox x:Name="PortCombo" Width="110" Margin="8,0,4,0"/>
+     <ComboBox x:Name="PortCombo" Width="235" Margin="8,0,4,0" Foreground="#111827" Background="#FFFFFF" BorderBrush="#64748B" FontSize="12" VerticalContentAlignment="Center" MaxDropDownHeight="260"/>
      <Button Content="Refresh" Click="Refresh_Click"/>
      <Button x:Name="ConnectButton" Content="Connect" Width="105" Click="Connect_Click"/>
      <Button Content="Remote" Click="Remote_Click"/>
