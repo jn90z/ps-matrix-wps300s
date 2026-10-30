@@ -8,6 +8,8 @@ public partial class MainWindow : Window
     private readonly UsbSerialScpiClient _device = new();
     private readonly DispatcherTimer _poll;
     private bool _busy, _pollBusy, _closing;
+    private int _readbackFailures;
+    private bool _readbackPaused;
     private double _voltage, _current;
     public MainWindow()
     {
@@ -40,6 +42,7 @@ public partial class MainWindow : Window
         {
             if (_device.Connected)
             {
+                _readbackPaused = true;
                 await _device.DisconnectAsync(OffOnDisconnectCheck.IsChecked == true);
                 ConnectButton.Content = "Connect";
                 ConnectionText.Text = "Disconnected";
@@ -53,12 +56,15 @@ public partial class MainWindow : Window
                 _device.Connect(port);
                 ConnectButton.Content = "Disconnect";
                 ConnectionText.Text = "Connected: " + port;
+                _readbackFailures = 0;
+                _readbackPaused = true;
                 AddLog("USB serial port opened: " + port);
                 try { AddLog("IDN: " + await _device.QueryAsync(MatrixScpi.Identify)); }
                 catch (Exception ex) { AddLog("Identification unavailable: " + ex.Message); }
                 try { await _device.SendAsync(MatrixScpi.Remote); AddLog("Remote mode requested."); }
                 catch (Exception ex) { AddLog("Remote mode failed: " + ex.Message); }
                 await ReadOutputStateAsync();
+                _readbackPaused = false;
             }
         }
         catch (Exception ex) { AddLog("Connection error: " + ex.Message); }
@@ -118,17 +124,31 @@ public partial class MainWindow : Window
     }
     private async void Poll_Tick(object? sender, EventArgs e)
     {
-        if (_pollBusy || _busy || !_device.Connected || PollCheck.IsChecked != true) return;
+        if (_pollBusy || _busy || _readbackPaused || !_device.Connected || PollCheck.IsChecked != true) return;
         _pollBusy = true;
         try
         {
-            _voltage = MatrixScpi.ParseNumber(await _device.QueryAsync(MatrixScpi.MeasureVoltage));
-            _current = MatrixScpi.ParseNumber(await _device.QueryAsync(MatrixScpi.MeasureCurrent));
+            AddLog("TX " + MatrixScpi.MeasureVoltageCurrent);
+            string response = await _device.QueryAsync(MatrixScpi.MeasureVoltageCurrent);
+            AddLog("RX " + response);
+            string[] values = response.Split(',', StringSplitOptions.TrimEntries);
+            if (values.Length != 2) throw new FormatException("Expected voltage,current from MEAS:VCM?, received: " + response);
+            _voltage = MatrixScpi.ParseNumber(values[0]);
+            _current = MatrixScpi.ParseNumber(values[1]);
+            _readbackFailures = 0;
             VoltageDisplay.Text = _voltage.ToString("000.000", CultureInfo.InvariantCulture);
             CurrentDisplay.Text = _current.ToString("0.0000", CultureInfo.InvariantCulture);
             PowerDisplay.Text = (_voltage * _current).ToString("000.000", CultureInfo.InvariantCulture);
         }
-        catch (Exception ex) { AddLog("Readback error: " + ex.Message); }
+        catch (Exception ex)
+        {
+            AddLog("Readback error: " + ex.Message);
+            if (++_readbackFailures >= 3)
+            {
+                _readbackPaused = true;
+                AddLog("Polling paused after 3 failures. Reconnect to retry; check device response and SCPI syntax.");
+            }
+        }
         finally { _pollBusy = false; }
     }
     private void Clear_Click(object sender, RoutedEventArgs e) => LogBox.Clear();
