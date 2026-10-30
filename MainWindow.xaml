@@ -1,0 +1,94 @@
+<Window x:Class="MatrixWps300s.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="MATRIX WPS300S-150-5 — USB Remote" Height="655" Width="960" MinWidth="830" MinHeight="570"
+ Background="#11151B" Foreground="#EAF0F7" FontFamily="Segoe UI" Closing="Window_Closing">
+ <Window.Resources>
+  <Style TargetType="Button">
+   <Setter Property="Background" Value="#263241"/><Setter Property="Foreground" Value="White"/>
+   <Setter Property="BorderBrush" Value="#43536A"/><Setter Property="Padding" Value="12,7"/>
+   <Setter Property="Margin" Value="4"/><Setter Property="FontWeight" Value="SemiBold"/>
+   <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style TargetType="TextBox">
+   <Setter Property="Background" Value="#0B121C"/><Setter Property="Foreground" Value="#EDF5FF"/>
+   <Setter Property="CaretBrush" Value="#54DDFB"/><Setter Property="BorderBrush" Value="#445469"/>
+   <Setter Property="Padding" Value="8,5"/>
+  </Style>
+  <Style TargetType="TextBlock">
+   <Setter Property="Foreground" Value="#EAF0F7"/>
+  </Style>
+ </Window.Resources>
+ <Grid Margin="16">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+  </Grid.RowDefinitions>
+  <Border Background="#1A222E" CornerRadius="9" Padding="12" Margin="0,0,0,14">
+   <DockPanel LastChildFill="True">
+    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+     <TextBlock Text="MATRIX  /  WPS300S-150-5" FontWeight="Bold" FontSize="17" VerticalAlignment="Center" Margin="0,0,20,0"/>
+     <TextBlock Text="USB COM" VerticalAlignment="Center"/>
+     <ComboBox x:Name="PortCombo" Width="110" Margin="8,0,4,0"/>
+     <Button Content="Refresh" Click="Refresh_Click"/>
+     <Button x:Name="ConnectButton" Content="Connect" Width="105" Click="Connect_Click"/>
+     <Button Content="Remote" Click="Remote_Click"/>
+     <Button Content="Local" Click="Local_Click"/>
+    </StackPanel>
+    <TextBlock x:Name="ConnectionText" Text="Disconnected" Foreground="#F6C65B" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold" Margin="12,0,0,0"/>
+   </DockPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="270"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Border Grid.Column="0" Background="#1A222E" CornerRadius="9" Padding="14" Margin="0,0,12,0">
+    <StackPanel>
+     <TextBlock Text="SETPOINTS" FontWeight="Bold" FontSize="18" Margin="0,0,0,18"/>
+     <TextBlock Text="Current limit (A)" Foreground="#69AFFF" FontWeight="Bold"/>
+     <TextBox x:Name="CurrentBox" Margin="0,7,0,8" TabIndex="0" ToolTip="0.0000 to 5.0000 A"/>
+     <Button Content="Set current" Click="SetCurrent_Click" Margin="0,0,0,15"/>
+     <TextBlock Text="Voltage (V)" Foreground="#55E1FF" FontWeight="Bold"/>
+     <TextBox x:Name="VoltageBox" Margin="0,7,0,8" TabIndex="1" ToolTip="0.000 to 150.000 V"/>
+     <Button Content="Set voltage" Click="SetVoltage_Click" Margin="0,0,0,16"/>
+     <Separator Background="#364456" Margin="0,0,0,15"/>
+     <Button Content="Apply BOTH setpoints" Click="Apply_Click" Margin="0,0,0,10"/>
+     <Button Content="OUTPUT ON" Background="#166534" BorderBrush="#22C55E" Height="42" Click="OutputOn_Click"/>
+     <Button Content="OUTPUT OFF" Background="#991B1B" BorderBrush="#EF4444" Height="42" Click="OutputOff_Click"/>
+     <Separator Background="#364456" Margin="0,18,0,10"/>
+     <CheckBox x:Name="PollCheck" Content="Live readback (500 ms)" IsChecked="True" Foreground="#EAF0F7"/>
+     <CheckBox x:Name="OffOnDisconnectCheck" Content="Send OFF on disconnect" IsChecked="True" Foreground="#EAF0F7" Margin="0,10,0,0"/>
+     <TextBlock Text="Output defaults to OFF; no automatic ON command." TextWrapping="Wrap" Foreground="#9FB0C2" Margin="0,14,0,0"/>
+    </StackPanel>
+   </Border>
+   <Border Grid.Column="1" Background="#060B11" BorderBrush="#303D50" BorderThickness="3" CornerRadius="18" Padding="24">
+    <Grid>
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <DockPanel Grid.Row="0" LastChildFill="False">
+      <TextBlock Text="DC POWER SUPPLY" FontWeight="Bold" Foreground="#95A7BD" FontSize="15"/>
+      <TextBlock x:Name="OutputStateText" Text="OUTPUT UNKNOWN" Foreground="#F3C56B" DockPanel.Dock="Right" FontWeight="Bold"/>
+     </DockPanel>
+     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+      <TextBlock x:Name="VoltageDisplay" Text="---.---" Foreground="#39DFFF" FontFamily="Consolas" FontWeight="Bold" FontSize="67"/>
+      <TextBlock Text=" V" Foreground="#39DFFF" FontSize="32" VerticalAlignment="Bottom" Margin="4,0,0,12"/>
+     </StackPanel>
+     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+      <TextBlock x:Name="CurrentDisplay" Text="-.----" Foreground="#3F9CFF" FontFamily="Consolas" FontWeight="Bold" FontSize="67"/>
+      <TextBlock Text=" A" Foreground="#3F9CFF" FontSize="32" VerticalAlignment="Bottom" Margin="4,0,0,12"/>
+     </StackPanel>
+     <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+      <TextBlock x:Name="PowerDisplay" Text="---.---" Foreground="#AE7BFF" FontFamily="Consolas" FontWeight="Bold" FontSize="67"/>
+      <TextBlock Text=" W" Foreground="#AE7BFF" FontSize="32" VerticalAlignment="Bottom" Margin="4,0,0,12"/>
+     </StackPanel>
+     <TextBlock Grid.Row="4" Text="SCPI • USB virtual serial • 9600 / 8N1 • CRLF" Foreground="#8193AA" HorizontalAlignment="Right"/>
+    </Grid>
+   </Border>
+  </Grid>
+  <Border Grid.Row="2" Margin="0,14,0,0" Background="#1A222E" CornerRadius="9" Padding="10">
+   <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <DockPanel Grid.Row="0" Margin="0,0,0,5">
+     <TextBlock Text="DEVICE LOG" FontWeight="Bold"/>
+     <Button Content="Clear" HorizontalAlignment="Right" DockPanel.Dock="Right" Padding="5,1" Click="Clear_Click"/>
+    </DockPanel>
+    <TextBox x:Name="LogBox" Grid.Row="1" Height="80" FontFamily="Consolas" FontSize="12" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+   </Grid>
+  </Border>
+ </Grid>
+</Window>
