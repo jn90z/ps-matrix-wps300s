@@ -34,7 +34,7 @@ public partial class MainWindow : Window
     {
         string? prior = (PortCombo.SelectedItem as PortChoice)?.Port;
         var ports = UsbSerialScpiClient.Ports();
-        PortCombo.ItemsSource = ports.Select(p => new PortChoice(p, "USB Serial Device (" + p + ")")).ToArray();
+        PortCombo.ItemsSource = ports.Select(p => new PortChoice(p, "USB-SERIAL CH340 (" + p + ")")).ToArray();
         var choices = PortCombo.Items.Cast<PortChoice>().ToArray();
         PortCombo.SelectedItem = choices.FirstOrDefault(p => p.Port == prior) ?? choices.FirstOrDefault();
     }
@@ -70,7 +70,7 @@ public partial class MainWindow : Window
                     string idn = await _device.QueryAsync(MatrixScpi.Identify);
                     AddLog("IDN: " + idn);
                     string[] parts = idn.Split(',', StringSplitOptions.TrimEntries);
-                    string name = parts.Length >= 2 ? parts[0] + " " + parts[1] : idn;
+                    string name = parts.Length >= 2 ? parts[0] + " " + parts[1].Replace("15005", "150-5") : idn;
                     ConnectionText.Text = "Connected: " + name + " (" + port + ")";
                     var updated = PortCombo.Items.Cast<PortChoice>().Select(p => p.Port == port ? new PortChoice(p.Port, name + " (" + port + ")") : p).ToArray();
                     PortCombo.ItemsSource = updated;
