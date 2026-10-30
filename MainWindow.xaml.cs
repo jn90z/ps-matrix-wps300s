@@ -11,6 +11,10 @@ public partial class MainWindow : Window
     private int _readbackFailures;
     private bool _readbackPaused;
     private double _voltage, _current;
+    private sealed record PortChoice(string Port, string Display)
+    {
+        public override string ToString() => Display;
+    }
     public MainWindow()
     {
         InitializeComponent();
@@ -28,10 +32,11 @@ public partial class MainWindow : Window
     }
     private void RefreshPorts()
     {
-        string? prior = PortCombo.SelectedItem as string;
-        PortCombo.ItemsSource = UsbSerialScpiClient.Ports();
-        if (prior is not null && PortCombo.Items.Contains(prior)) PortCombo.SelectedItem = prior;
-        else if (PortCombo.Items.Count > 0) PortCombo.SelectedIndex = 0;
+        string? prior = (PortCombo.SelectedItem as PortChoice)?.Port;
+        var ports = UsbSerialScpiClient.Ports();
+        PortCombo.ItemsSource = ports.Select(p => new PortChoice(p, "USB Serial Device (" + p + ")")).ToArray();
+        var choices = PortCombo.Items.Cast<PortChoice>().ToArray();
+        PortCombo.SelectedItem = choices.FirstOrDefault(p => p.Port == prior) ?? choices.FirstOrDefault();
     }
     private void Refresh_Click(object sender, RoutedEventArgs e) => RefreshPorts();
     private async void Connect_Click(object sender, RoutedEventArgs e)
@@ -52,14 +57,25 @@ public partial class MainWindow : Window
             }
             else
             {
-                if (PortCombo.SelectedItem is not string port) { AddLog("Select a USB COM port."); return; }
+                if (PortCombo.SelectedItem is not PortChoice choice) { AddLog("Select a USB COM port."); return; }
+                string port = choice.Port;
                 _device.Connect(port);
                 ConnectButton.Content = "Disconnect";
                 ConnectionText.Text = "Connected: " + port;
                 _readbackFailures = 0;
                 _readbackPaused = true;
                 AddLog("USB serial port opened: " + port);
-                try { AddLog("IDN: " + await _device.QueryAsync(MatrixScpi.Identify)); }
+                try
+                {
+                    string idn = await _device.QueryAsync(MatrixScpi.Identify);
+                    AddLog("IDN: " + idn);
+                    string[] parts = idn.Split(',', StringSplitOptions.TrimEntries);
+                    string name = parts.Length >= 2 ? parts[0] + " " + parts[1] : idn;
+                    ConnectionText.Text = "Connected: " + name + " (" + port + ")";
+                    var updated = PortCombo.Items.Cast<PortChoice>().Select(p => p.Port == port ? new PortChoice(p.Port, name + " (" + port + ")") : p).ToArray();
+                    PortCombo.ItemsSource = updated;
+                    PortCombo.SelectedItem = updated.First(p => p.Port == port);
+                }
                 catch (Exception ex) { AddLog("Identification unavailable: " + ex.Message); }
                 try { await _device.SendAsync(MatrixScpi.Remote); AddLog("Remote mode requested."); }
                 catch (Exception ex) { AddLog("Remote mode failed: " + ex.Message); }
